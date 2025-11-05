@@ -2,39 +2,43 @@
 <html lang="en">
 <head>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Cine Arena - Movies</title>
-  <link rel="shortcut icon" href="https://cinearena.github.io/astro-jwplyr/faviconimg.jpeg" />
-  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="shortcut icon" type="image/x-icon" href="https://cinearena.github.io/astro-jwplyr/faviconimg.jpeg" />
+  <title>Cine Arena</title>
+   <script src="https://cdn.tailwindcss.com"></script>
 
   <style>
     body {
-      background: linear-gradient(135deg, #0f0f0f, #1f1f1f);
-      color: white;
-      margin: 0;
       font-family: Arial, sans-serif;
+      background: linear-gradient(135deg, #0f0f0f, #1f1f1f);
+      margin: 0;
+      color: white;
+      padding-top: 60px !important;
     }
 
+    /* Pretty Section Heading */
     .section-title {
       text-align: center;
-      font-size: 28px;
+      font-size: 30px;
       font-weight: 800;
-      margin: 20px 0;
+      margin: 2px 0 2px;
       text-transform: uppercase;
       background: linear-gradient(90deg, #ff0077, #00eaff);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
+      position: relative;
     }
+
     .section-title::after {
       content: "";
-      width: 90px;
+      width: 100px;
       height: 4px;
       background: linear-gradient(90deg, #ff0077, #00eaff);
       display: block;
       margin: 6px auto 0;
-      border-radius: 6px;
+      border-radius: 10px;
     }
 
-    /* Cards Grid */
+     /* Movies Grid */
     .movies-grid {
       display: grid;
       gap: 15px;
@@ -42,14 +46,14 @@
       grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
     }
 
-    /* Force 2 per row on Mobile */
+    /* 2 per row on Mobile */
     @media (max-width: 600px) {
       .movies-grid {
         grid-template-columns: repeat(2, 1fr) !important;
       }
     }
 
-    /* Card Style */
+    /* Movie Card */
     .movie-card {
       background: rgba(255, 255, 255, 0.07);
       border: 1px solid rgba(255,255,255,0.1);
@@ -59,83 +63,161 @@
       transition: 0.3s;
       cursor: pointer;
     }
-
     .movie-card:hover {
       transform: scale(1.05);
       box-shadow: 0 6px 16px rgba(0,0,0,0.6);
     }
-
     .movie-card img {
       width: 100%;
       height: auto;
       object-fit: cover;
     }
-
     .movie-card h3 {
       padding: 8px;
-      font-size: 18px;
+      font-size: 16px;
     }
 
-    /* Telegram Floating Button */
-    .telegram-float {
-      position: fixed;
-      width: 55px;
-      height: 55px;
-      bottom: 20px;
-      right: 20px;
-      background: #0088cc;
-      border-radius: 50%;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      z-index: 999;
+    /* Load More Button */
+    .load-btn {
+      display: block;
+      width: 70%;
+      margin: 15px auto 36px;
+      padding: 10px;
+      border: none;
+      border-radius: 8px;
+      background: #0086ff;
+      color: white;
+      cursor: pointer;
+      font-size: 16px;
       transition: .3s;
     }
-    .telegram-float:hover {
-      transform: scale(1.12);
-    }
-    .telegram-float img {
-      width: 60%;
-    }
+    .load-btn:hover { background: #0070d1; }
+
+    .telegram-float {
+  position: fixed;
+  width: 55px;
+  height: 55px;
+  bottom: 20px;
+  right: 20px;
+  background: #0088cc;
+  color: white;
+  border-radius: 50%;
+  text-align: center;
+  box-shadow: 0 8px 16px rgba(0,0,0,0.3);
+  z-index: 999;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: transform .3s, box-shadow .3s;
+}
+
+.telegram-float:hover {
+  transform: scale(1.12);
+  box-shadow: 0 12px 18px rgba(0,0,0,0.4);
+}
+
+.telegram-float img {
+  width: 60%;
+  filter: invert(0); /* keep original color */
+}
+
+    /* Desktop / Laptop */
+@media (min-width: 768px) {
+  .search-box {
+    margin-left: 40px !important;
+    margin-right: 40px !important;
+  }
+}
+
+/* Mobile stays full width (no change needed) */
+
+
   </style>
 </head>
 
-<body>
+<body >
 
-<header class="p-4 bg-blue-900 text-center text-2xl font-bold">
-  <a href="cinearena.live">
-    <img src="https://cricstream4u.github.io/cinearena/cineheader.png" class="h-10 mx-auto">
-  </a>
-</header>
+  <!-- Header -->
+  <!--- Main Content -->
+  <h1 class="section-title">AsMu 💞 Forever</h1>
 
-<h1 class="section-title">🎬 Movies</h1>
+  <div id="movies" class="movies-grid"></div>
+<button id="loadMore" class="load-btn">Load More</button>
 
-<div id="movies" class="movies-grid"></div>
 
-<script>
+ <script>
+  const sidebar = document.getElementById("sidebar");
+  const overlay = document.getElementById("overlay");
+  const openMenu = document.getElementById("open-menu");
+
+  openMenu.addEventListener("click", () => {
+    sidebar.classList.remove("-translate-x-full");
+    overlay.classList.remove("hidden");
+  });
+
+  overlay.addEventListener("click", () => {
+    sidebar.classList.add("-translate-x-full");
+    overlay.classList.add("hidden");
+  });
+</script>
+
+<!--- movies grid -->
+  <script>
+let allMovies = [];
+let startIndex = 0;
+const limit = 24; // ✅ Load 24 each time
+
 async function loadMovies() {
   const url = "https://raw.githubusercontent.com/cricstream4u/asmu/main/asmu.json"; 
   const response = await fetch(url);
   const data = await response.json();
-  const moviesDiv = document.getElementById("movies");
-
-  data.movies.forEach(movie => {
-    const card = document.createElement("div");
-    card.className = "movie-card";
-    card.onclick = () => window.open(movie.url, "_blank");
-
-    card.innerHTML = `
-      <img src="${movie.image}" alt="${movie.title}">
-      <h3>${movie.title}</h3>
-    `;
-    moviesDiv.appendChild(card);
-  });
+  allMovies = data.movies;
+  displayMovies();
 }
+
+function displayMovies(reset = false) {
+  const grid = document.getElementById("movies");
+  const searchValue = document.getElementById("searchInput").value.toLowerCase();
+
+  // Reset when searching
+  if (reset) {
+    startIndex = 0;
+    grid.innerHTML = "";
+  }
+
+  // Filter movie list
+  const filteredMovies = allMovies.filter(m => m.title.toLowerCase().includes(searchValue));
+
+  // Select next 24
+  const moviesToShow = filteredMovies.slice(startIndex, startIndex + limit);
+
+  moviesToShow.forEach(movie => {
+    grid.innerHTML += `
+      <div class="movie-card" onclick="window.open('${movie.url}', '_blank')">
+        <img src="${movie.image}" alt="${movie.title}">
+        <h3>${movie.title}</h3>
+      </div>`;
+  });
+
+  startIndex += limit;
+
+  // Hide Load More button if finished
+  document.getElementById("loadMore").style.display =
+    startIndex >= filteredMovies.length ? "none" : "block";
+}
+
+document.getElementById("loadMore").addEventListener("click", () => displayMovies());
+document.getElementById("searchInput").addEventListener("input", () => displayMovies(true));
+
 loadMovies();
+
 </script>
 
-<a href="https://t.me/cine_arena" class="telegram-float" target="_blank">
-   <img src="https://upload.wikimedia.org/wikipedia/commons/8/82/Telegram_logo.svg">
+
+
+
+  <a href="https://t.me/cine_arena" class="telegram-float" target="_blank">
+  <img src="https://upload.wikimedia.org/wikipedia/commons/8/82/Telegram_logo.svg" alt="Telegram">
 </a>
 
 </body>
