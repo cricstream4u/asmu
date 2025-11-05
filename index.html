@@ -169,7 +169,7 @@ const limit = 24; // ✅ Load 24 each time
 
 async function loadMovies() {
   const url = "https://raw.githubusercontent.com/cricstream4u/asmu/main/asmu.json"; 
-  const response = await fetch(url);
+  
   const data = await response.json();
   allMovies = data.movies;
   displayMovies();
@@ -216,9 +216,6 @@ loadMovies();
 
 
 
-  <a href="https://t.me/cine_arena" class="telegram-float" target="_blank">
-  <img src="https://upload.wikimedia.org/wikipedia/commons/8/82/Telegram_logo.svg" alt="Telegram">
-</a>
 
 </body>
 </html>
