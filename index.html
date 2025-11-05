@@ -165,11 +165,11 @@
   <script>
 let allMovies = [];
 let startIndex = 0;
-const limit = 24; // ✅ Load 24 each time
+const limit = 24;
 
 async function loadMovies() {
-  const url = "https://raw.githubusercontent.com/cricstream4u/asmu/main/asmu.json"; 
-  
+  const url = "https://raw.githubusercontent.com/cricstream4u/asmu/main/asmu.json";
+  const response = await fetch(url);
   const data = await response.json();
   allMovies = data.movies;
   displayMovies();
@@ -177,40 +177,32 @@ async function loadMovies() {
 
 function displayMovies(reset = false) {
   const grid = document.getElementById("movies");
-  const searchValue = document.getElementById("searchInput").value.toLowerCase();
 
-  // Reset when searching
   if (reset) {
     startIndex = 0;
     grid.innerHTML = "";
   }
 
-  // Filter movie list
-  const filteredMovies = allMovies.filter(m => m.title.toLowerCase().includes(searchValue));
-
-  // Select next 24
-  const moviesToShow = filteredMovies.slice(startIndex, startIndex + limit);
+  const moviesToShow = allMovies.slice(startIndex, startIndex + limit);
 
   moviesToShow.forEach(movie => {
     grid.innerHTML += `
-      <div class="movie-card" onclick="window.open('${movie.url}', '_blank')">
+      <div class="movie-card" onclick="window.open('${movie.image}', '_blank')">
         <img src="${movie.image}" alt="${movie.title}">
         <h3>${movie.title}</h3>
-      </div>`;
+      </div>
+    `;
   });
 
   startIndex += limit;
 
-  // Hide Load More button if finished
   document.getElementById("loadMore").style.display =
-    startIndex >= filteredMovies.length ? "none" : "block";
+    startIndex >= allMovies.length ? "none" : "block";
 }
 
 document.getElementById("loadMore").addEventListener("click", () => displayMovies());
-document.getElementById("searchInput").addEventListener("input", () => displayMovies(true));
 
 loadMovies();
-
 </script>
 
 
